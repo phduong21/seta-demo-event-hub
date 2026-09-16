@@ -17,18 +17,26 @@ public class DiagnosticsController : ControllerBase
     [HttpPost("send")]
     public async Task<IActionResult> Send(CancellationToken cancellationToken)
     {
-        var result = await _diagnosticsService.TestSendAsync(cancellationToken);
-        return result.Ok
-            ? Ok(result)
-            : StatusCode(StatusCodes.Status503ServiceUnavailable, result);
+        var response = await _diagnosticsService.TestSendAsync(cancellationToken);
+
+        if (response.Success)
+        {
+            return Ok(response);
+        }
+
+        return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
     }
 
     [HttpGet("receive")]
     public async Task<IActionResult> Receive(CancellationToken cancellationToken)
     {
-        var result = await _diagnosticsService.TestReceiveAsync(cancellationToken);
-        return result.Ok
-            ? Ok(result)
-            : StatusCode(StatusCodes.Status503ServiceUnavailable, result);
+        var response = await _diagnosticsService.TestReceiveAsync(cancellationToken);
+
+        if (response.Success)
+        {
+            return Ok(response);
+        }
+
+        return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
     }
 }

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace EventHubDemo.Models;
+namespace EventHubDemo.Models.Events;
 
 public class OrderCancelled
 {

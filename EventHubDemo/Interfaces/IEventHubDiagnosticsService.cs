@@ -1,10 +1,10 @@
-using EventHubDemo.Models;
+using EventHubDemo.Models.Responses;
 
 namespace EventHubDemo.Interfaces;
 
 public interface IEventHubDiagnosticsService
 {
-    Task<SendResult> TestSendAsync(CancellationToken cancellationToken);
+    Task<ApiResponse<TestSendResponse>> TestSendAsync(CancellationToken cancellationToken);
 
-    Task<ReceiveResult> TestReceiveAsync(CancellationToken cancellationToken);
+    Task<ApiResponse<TestReceiveResponse>> TestReceiveAsync(CancellationToken cancellationToken);
 }

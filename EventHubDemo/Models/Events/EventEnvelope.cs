@@ -1,4 +1,4 @@
-namespace EventHubDemo.Models;
+namespace EventHubDemo.Models.Events;
 
 public class EventEnvelope<T>
 {
