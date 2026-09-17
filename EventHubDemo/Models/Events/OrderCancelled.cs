@@ -4,8 +4,7 @@ namespace EventHubDemo.Models.Events;
 
 public class OrderCancelled
 {
-    [Required]
-    public string OrderId { get; set; } = string.Empty;
+    public Guid OrderId { get; set; }
 
     [Required]
     public string Reason { get; set; } = string.Empty;

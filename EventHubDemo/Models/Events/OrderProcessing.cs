@@ -4,6 +4,5 @@ namespace EventHubDemo.Models.Events;
 
 public class OrderProcessing
 {
-    [Required]
-    public string OrderId { get; set; } = string.Empty;
+    public Guid OrderId { get; set; }
 }
