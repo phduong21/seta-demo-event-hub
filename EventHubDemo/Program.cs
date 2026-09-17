@@ -1,4 +1,6 @@
 using Azure.Messaging.EventHubs.Producer;
+using Azure.Messaging.EventHubs;
+using Azure.Storage.Blobs;
 using EventHubDemo.Configuration;
 using EventHubDemo.Interfaces;
 using EventHubDemo.Models.Responses;
@@ -36,8 +38,21 @@ builder.Services.AddSingleton(sp =>
     return new EventHubProducerClient(options.ConnectionString);
 });
 
+builder.Services.AddSingleton(sp =>
+{
+    var eventHub = sp.GetRequiredService<IOptions<EventHubOptions>>().Value;
+    var storageConnection = builder.Configuration["Storage:ConnectionString"];
+
+    var container = new BlobContainerClient(storageConnection, "checkpoints");
+    container.CreateIfNotExists();
+
+    return new EventProcessorClient(container, eventHub.ConsumerGroup, eventHub.ConnectionString);
+});
+
 builder.Services.AddSingleton<IEventHubDiagnosticsService, EventHubDiagnosticsService>();
 builder.Services.AddSingleton<IEventPublisherService, EventHubPublisherService>();
+builder.Services.AddSingleton<EventDispatcher>();
+builder.Services.AddHostedService<EventHubConsumerService>();
 
 var app = builder.Build();
 

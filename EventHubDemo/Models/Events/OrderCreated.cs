@@ -1,18 +1,16 @@
 using System.ComponentModel.DataAnnotations;
+using EventHubDemo.Models.Enums;
 
 namespace EventHubDemo.Models.Events;
 
 public class OrderCreated
 {
-    [Required]
-    public string OrderId { get; set; } = string.Empty;
+    public Guid OrderId { get; set; }
 
-    [Required]
-    public string CustomerId { get; set; } = string.Empty;
+    public Guid CustomerId { get; set; }
 
     [Range(0.01, double.MaxValue)]
     public decimal Amount { get; set; }
 
-    [Required]
-    public string Currency { get; set; } = string.Empty;
+    public Currency Currency { get; set; }
 }

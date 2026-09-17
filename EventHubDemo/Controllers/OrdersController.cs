@@ -22,31 +22,31 @@ public class OrdersController : ControllerBase
         return PublishAsync(EventTypes.OrderCreated, payload, payload.OrderId, cancellationToken);
     }
 
-    [HttpPost("{orderId}/processing")]
-    public Task<IActionResult> Processing(string orderId, CancellationToken cancellationToken)
+    [HttpPost("{orderId:guid}/processing")]
+    public Task<IActionResult> Processing(Guid orderId, CancellationToken cancellationToken)
     {
         var payload = new OrderProcessing { OrderId = orderId };
         return PublishAsync(EventTypes.OrderProcessing, payload, orderId, cancellationToken);
     }
 
-    [HttpPost("{orderId}/completed")]
-    public Task<IActionResult> Completed(string orderId, CancellationToken cancellationToken)
+    [HttpPost("{orderId:guid}/completed")]
+    public Task<IActionResult> Completed(Guid orderId, CancellationToken cancellationToken)
     {
         var payload = new OrderCompleted { OrderId = orderId };
         return PublishAsync(EventTypes.OrderCompleted, payload, orderId, cancellationToken);
     }
 
-    [HttpPost("{orderId}/cancelled")]
-    public Task<IActionResult> Cancelled(string orderId, CancelOrderRequest request, CancellationToken cancellationToken)
+    [HttpPost("{orderId:guid}/cancelled")]
+    public Task<IActionResult> Cancelled(Guid orderId, CancelOrderRequest request, CancellationToken cancellationToken)
     {
         var payload = new OrderCancelled { OrderId = orderId, Reason = request.Reason };
         return PublishAsync(EventTypes.OrderCancelled, payload, orderId, cancellationToken);
     }
 
-    private async Task<IActionResult> PublishAsync<T>(string eventType, T payload, string orderId, CancellationToken cancellationToken)
+    private async Task<IActionResult> PublishAsync<T>(string eventType, T payload, Guid orderId, CancellationToken cancellationToken)
     {
         var envelope = EventEnvelope<T>.Create(eventType, payload);
-        var response = await _publisher.PublishAsync(envelope, orderId, cancellationToken);
+        var response = await _publisher.PublishAsync(envelope, orderId.ToString(), cancellationToken);
 
         if (response.Success)
         {

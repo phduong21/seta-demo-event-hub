@@ -29,7 +29,6 @@ public class EventHubPublisherService : IEventPublisherService
 
             eventData.Properties["eventType"] = envelope.EventType;
             eventData.Properties["eventId"] = envelope.EventId.ToString();
-            eventData.Properties["correlationId"] = envelope.CorrelationId;
 
             await _producer.SendAsync(new[] { eventData }, new SendEventOptions { PartitionKey = partitionKey }, cancellationToken);
 
