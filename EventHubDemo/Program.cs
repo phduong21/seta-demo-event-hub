@@ -2,10 +2,12 @@ using Azure.Messaging.EventHubs.Producer;
 using Azure.Messaging.EventHubs;
 using Azure.Storage.Blobs;
 using EventHubDemo.Configuration;
+using EventHubDemo.Data;
 using EventHubDemo.Interfaces;
 using EventHubDemo.Models.Responses;
 using EventHubDemo.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +51,12 @@ builder.Services.AddSingleton(sp =>
     return new EventProcessorClient(container, eventHub.ConsumerGroup, eventHub.ConnectionString);
 });
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IProcessedEventRepository, ProcessedEventRepository>();
+
 builder.Services.AddSingleton<IEventHubDiagnosticsService, EventHubDiagnosticsService>();
 builder.Services.AddSingleton<IEventPublisherService, EventHubPublisherService>();
 builder.Services.AddSingleton<EventDispatcher>();
@@ -58,6 +66,12 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+    }
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }
