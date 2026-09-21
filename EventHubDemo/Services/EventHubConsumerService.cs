@@ -7,6 +7,8 @@ namespace EventHubDemo.Services;
 
 public class EventHubConsumerService : BackgroundService
 {
+    private const int MaxAttempts = 3;
+
     private readonly EventProcessorClient _processor;
     private readonly EventDispatcher _dispatcher;
     private readonly ILogger<EventHubConsumerService> _logger;
@@ -68,8 +70,31 @@ public class EventHubConsumerService : BackgroundService
             return;
         }
 
-        using var scope = _scopeFactory.CreateScope();
-        await HandleAsync(scope.ServiceProvider, data, partitionId, eventId, cancellationToken);
+        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                await HandleAsync(scope.ServiceProvider, data, partitionId, eventId, cancellationToken);
+                return;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                if (attempt == MaxAttempts)
+                {
+                    _logger.LogError(ex, "Event failed: EventId={EventId} after {MaxAttempts} attempts, skipping (poison)", eventId, MaxAttempts);
+                    return;
+                }
+
+                var delay = TimeSpan.FromSeconds(attempt);
+                _logger.LogWarning(ex, "Processing EventId={EventId} failed on attempt {Attempt}/{MaxAttempts}, retrying in {Delay}s", eventId, attempt, MaxAttempts, delay.TotalSeconds);
+                await Task.Delay(delay, cancellationToken);
+            }
+        }
     }
 
     private async Task HandleAsync(IServiceProvider services, EventData data, string partitionId, Guid eventId, CancellationToken cancellationToken)
@@ -79,7 +104,7 @@ public class EventHubConsumerService : BackgroundService
 
         if (await processedEvents.HasProcessedAsync(eventId, cancellationToken))
         {
-            _logger.LogInformation("Skip duplicate EventId= {EventId} ", eventId);
+            _logger.LogInformation("Skip duplicate EventId= {EventId}", eventId);
             return;
         }
 
